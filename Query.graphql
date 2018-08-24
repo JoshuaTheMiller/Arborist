@@ -1,0 +1,72 @@
+query GetFirstBranchesForAllReposForUser($login: String!) {
+  user(login: $login) {
+    name
+    repositories(first: 100) {
+      edges {
+        node {
+          name
+          ...getOwnerInfo
+          ...getFirstHundredBranches
+        }
+      }
+      ...getPageInfo
+    }
+  }
+}
+
+query GetBranchesForAllReposForUserPaged($login: String!, $edgeNextPage: String) {
+  user(login: $login) {
+    name
+    repositories(first: 100, after: $edgeNextPage) {
+      edges {
+        node {
+          name
+          ...getOwnerInfo
+          ...getBranchesPaged
+        }
+      }
+      ...getPageInfo
+    }
+  }
+}
+
+fragment getFirstHundredBranches on Repository {
+  refs(refPrefix: "refs/heads/", first: 100) {
+    ...getBranchInfo
+  }
+}
+
+fragment getBranchesPaged on Repository {
+  refs(refPrefix: "refs/heads/", first: 100, after: $edgeNextPage) {
+    ...getBranchInfo
+  }
+}
+
+fragment getOwnerInfo on Repository {
+  owner {
+    login
+    url
+  }
+}
+
+fragment getPageInfo on RepositoryConnection {
+  pageInfo {
+    endCursor
+    hasNextPage
+  }
+}
+
+fragment getBranchInfo on RefConnection {
+  edges {
+    node {
+      name
+      repository {        
+        ...getOwnerInfo
+      }
+    }
+  }
+  pageInfo {
+    endCursor
+    hasNextPage
+  }
+}
